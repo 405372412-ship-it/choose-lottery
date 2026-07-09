@@ -789,9 +789,14 @@
     function loadState() {
       try {
         const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (stored && Array.isArray(stored.gifts) && Array.isArray(stored.rounds)) return { ...clone(defaults), ...stored };
+        if (stored && Array.isArray(stored.gifts) && Array.isArray(stored.rounds)) return normalizeState({ ...clone(defaults), ...stored });
       } catch (error) {}
-      return clone(defaults);
+      return normalizeState(clone(defaults));
+    }
+
+    function normalizeState(nextState) {
+      nextState.gifts = (nextState.gifts || []).map((gift) => ({ ...gift, enabled: isGiftEnabled(gift) }));
+      return nextState;
     }
     function saveState() {
       state.updatedAt = Date.now();
@@ -813,17 +818,21 @@
     function nextPendingRound() {
       return state.rounds.find((round) => (round.records || []).length < 1) || null;
     }
-    function activeGifts() {
-      return state.gifts.filter((gift) => gift.enabled && gift.name.trim());
+    function isGiftEnabled(gift) {
+      return gift.enabled !== false && gift.enabled !== "false";
     }
+
+    function activeGifts() {
+      return state.gifts.filter((gift) => isGiftEnabled(gift) && gift.name.trim());
+    }
+
+    function displayGifts() {
+      return state.gifts.filter((gift) => gift.name.trim());
+    }
+
     function prizeTextForRound(round) {
       if (!round) return "本轮奖品：等待后台配置";
-      let gifts = activeGifts();
-      if (round.drawMode === "fixed") {
-        const fixed = state.gifts.find((gift) => gift.id === round.fixedPrizeId);
-        gifts = fixed ? [fixed] : [];
-      }
-      const names = gifts.map((gift) => gift.name.trim()).filter(Boolean);
+      const names = displayGifts().map((gift) => gift.name.trim()).filter(Boolean);
       return names.length ? `本轮奖品：${names.join("、")}` : "本轮奖品：等待后台配置";
     }
     function escapeHtml(value) {
@@ -882,7 +891,7 @@
       }
       let gift = pool[Math.floor(Math.random() * pool.length)];
       if (round.drawMode === "fixed") {
-        gift = state.gifts.find((item) => item.id === round.fixedPrizeId) || gift;
+        gift = pool.find((item) => item.id === round.fixedPrizeId) || gift;
       }
       const record = {
         id: `w${Date.now()}${Math.random().toString(16).slice(2)}`,

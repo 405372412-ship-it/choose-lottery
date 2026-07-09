@@ -442,12 +442,24 @@
     function loadState() {
       try {
         const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (stored && Array.isArray(stored.gifts) && Array.isArray(stored.rounds)) return { ...clone(defaults), ...stored };
+        if (stored && Array.isArray(stored.gifts) && Array.isArray(stored.rounds)) return normalizeState({ ...clone(defaults), ...stored });
       } catch (error) {}
-      return clone(defaults);
+      return normalizeState(clone(defaults));
+    }
+
+    function normalizeState(nextState) {
+      nextState.gifts = (nextState.gifts || []).map((gift) => ({ ...gift, enabled: isGiftEnabled(gift) }));
+      return nextState;
     }
 
     function saveState() {
+      state.gifts.forEach((gift) => { gift.enabled = isGiftEnabled(gift); });
+      const selectableGifts = activeGifts();
+      state.rounds.forEach((round) => {
+        if (!selectableGifts.some((gift) => gift.id === round.fixedPrizeId)) {
+          round.fixedPrizeId = selectableGifts[0]?.id || "";
+        }
+      });
       state.updatedAt = Date.now();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       els.saveState.textContent = "已自动保存";
@@ -464,14 +476,19 @@
       return state.rounds.find((round) => round.id === state.activeRoundId) || state.rounds[0];
     }
 
+    function isGiftEnabled(gift) {
+      return gift.enabled !== false && gift.enabled !== "false";
+    }
+
     function activeGifts() {
-      return state.gifts.filter((gift) => gift.enabled && gift.name.trim());
+      return state.gifts.filter((gift) => isGiftEnabled(gift) && gift.name.trim());
     }
 
     function render() {
       const round = activeRound();
       if (!round) return;
       state.rounds.forEach((item) => { item.winnerCount = 1; item.records ||= []; });
+      state.gifts.forEach((gift) => { gift.enabled = isGiftEnabled(gift); });
       els.activityName.value = state.activityName;
       if (![4, 6, 8].includes(Number(state.vaultCount))) state.vaultCount = 6;
       els.vaultCount.value = String(state.vaultCount);
@@ -489,33 +506,27 @@
 
       els.roundName.value = round.name;
       els.drawMode.value = round.drawMode;
-      els.fixedPrize.innerHTML = state.gifts.map((gift) => `<option value="${gift.id}">${escapeHtml(gift.name || "未命名礼品")}</option>`).join("");
-      els.fixedPrize.value = round.fixedPrizeId || state.gifts[0]?.id || "";
+      const selectableGifts = activeGifts();
+      if (!selectableGifts.some((gift) => gift.id === round.fixedPrizeId)) round.fixedPrizeId = selectableGifts[0]?.id || "";
+      els.fixedPrize.innerHTML = selectableGifts.map((gift) => `<option value="${gift.id}">${escapeHtml(gift.name || "未命名礼品")}</option>`).join("");
+      els.fixedPrize.value = round.fixedPrizeId || "";
       els.fixedPrize.disabled = round.drawMode === "random";
 
       els.giftGrid.innerHTML = state.gifts.map((gift, index) => `
         <article class="gift" data-gift="${gift.id}">
           <img src="${escapeAttr(gift.image)}" alt="${escapeAttr(gift.name)}">
-          <label>礼品名称
+          <label>礼品${index + 1}名称
             <input data-field="name" value="${escapeAttr(gift.name)}" maxlength="24">
-          </label>
-          <label>图片地址
-            <input data-field="image" value="${escapeAttr(gift.image)}">
           </label>
           <label>上传图片
             <input type="file" accept="image/*" data-upload-image>
           </label>
-          <div class="grid-2">
-            <label>是否进入礼品池
-              <select data-field="enabled">
-                <option value="true" ${gift.enabled ? "selected" : ""}>启用</option>
-                <option value="false" ${!gift.enabled ? "selected" : ""}>停用</option>
-              </select>
-            </label>
-            <label>礼品序号
-              <input value="${index + 1}" disabled>
-            </label>
-          </div>
+          <label>是否进入礼品池
+            <select data-field="enabled">
+              <option value="true" ${isGiftEnabled(gift) ? "selected" : ""}>启用</option>
+              <option value="false" ${!isGiftEnabled(gift) ? "selected" : ""}>停用</option>
+            </select>
+          </label>
           <button class="danger" data-remove="${gift.id}">删除礼品</button>
         </article>
       `).join("");
@@ -647,6 +658,7 @@
       const card = event.target.closest("[data-gift]");
       const gift = state.gifts.find((item) => item.id === card?.dataset.gift);
       if (!gift || !event.target.dataset.field) return;
+      if (event.target.dataset.field === "enabled") return;
       gift[event.target.dataset.field] = event.target.value;
       saveState();
       flashSaved();
