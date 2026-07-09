@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VIP礼品直播抽奖后台</title>
+  <style>
+    :root {
+      --bg: #06131f;
+      --panel: rgba(8, 22, 35, .82);
+      --panel-2: rgba(12, 36, 55, .72);
+      --cyan: #26e6ff;
+      --cyan-soft: rgba(38, 230, 255, .18);
+      --magenta: #f043ff;
+      --red: #ff2e5f;
+      --gold: #ffd36a;
+      --gold-2: #bd8428;
+      --ink: #effbff;
+      --muted: #8eb8c8;
+      --line: rgba(72, 220, 255, .24);
+      --ok: #4ce28b;
+      --danger: #ff6f7d;
+      color-scheme: dark;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(2, 8, 16, .92), rgba(2, 16, 28, .72), rgba(2, 8, 16, .92)),
+        url("assets/vault-reference.png") center / cover fixed,
+        var(--bg);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(38,230,255,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(38,230,255,.04) 1px, transparent 1px),
+        radial-gradient(circle at 50% 10%, rgba(38,230,255,.2), transparent 34%);
+      background-size: 48px 48px, 48px 48px, 100% 100%;
+      mask-image: linear-gradient(180deg, black, transparent 78%);
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(62deg, transparent 0 26%, rgba(240,67,255,.32) 26.2% 26.7%, transparent 27%),
+        linear-gradient(116deg, transparent 0 31%, rgba(255,46,95,.24) 31.2% 31.6%, transparent 32%);
+      opacity: .75;
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      width: min(1480px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 34px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      min-height: 84px;
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(7, 20, 34, .92), rgba(12, 40, 58, .76));
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .42), inset 0 0 32px rgba(38,230,255,.08);
+      backdrop-filter: blur(16px);
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 {
+      font-size: clamp(24px, 3vw, 36px);
+      line-height: 1.15;
+      color: transparent;
+      background: linear-gradient(90deg, #eaffff, var(--cyan), #fff1bc, var(--gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      font-weight: 900;
+    }
+
+    h2 { font-size: 18px; }
+    h3 { font-size: 15px; color: var(--gold); }
+    .muted { color: var(--muted); }
+
+    .top-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 18px 58px rgba(0,0,0,.34), inset 0 0 24px rgba(38,230,255,.06);
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(90deg, rgba(38,230,255,.13), rgba(255,211,106,.08), transparent);
+    }
+
+    .panel-body { padding: 16px; }
+    .stack { display: grid; gap: 14px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .grid-1 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+
+    label {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid rgba(72, 220, 255, .26);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--ink);
+      background: rgba(2, 11, 20, .7);
+      outline: none;
+      font: inherit;
+    }
+
+    textarea { min-height: 96px; resize: vertical; line-height: 1.55; }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(38,230,255,.13);
+    }
+
+    button, .link-btn {
+      min-height: 42px;
+      border: 1px solid rgba(72, 220, 255, .35);
+      border-radius: 8px;
+      padding: 0 14px;
+      color: var(--ink);
+      background: linear-gradient(180deg, rgba(20, 64, 88, .94), rgba(8, 22, 35, .95));
+      font: inherit;
+      font-weight: 800;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    button:hover, .link-btn:hover { transform: translateY(-1px); border-color: var(--cyan); }
+    .primary { color: #07131d; background: linear-gradient(180deg, #9af7ff, #26e6ff); }
+    .gold { color: #181007; background: linear-gradient(180deg, #fff1bc, #d99d32); border-color: rgba(255,211,106,.68); }
+    .danger { color: #ffe4e7; border-color: rgba(255,111,125,.55); background: rgba(72, 12, 22, .72); }
+    .ghost { background: rgba(255,255,255,.04); }
+    .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .round-list { display: grid; gap: 10px; max-height: 420px; overflow: auto; padding-right: 3px; }
+    .round-card {
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 5px;
+      text-align: left;
+      padding: 12px;
+      border: 1px solid rgba(72, 220, 255, .22);
+      border-radius: 8px;
+      background: rgba(2, 11, 20, .44);
+      cursor: pointer;
+    }
+
+    .round-card.active {
+      border-color: var(--gold);
+      box-shadow: 0 0 22px rgba(255,211,106,.12);
+    }
+
+    .round-card strong { color: var(--ink); }
+    .round-card span { color: var(--muted); font-size: 12px; font-weight: 500; }
+
+    .round-info {
+      display: grid;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .round-delete {
+      width: 44px;
+      min-width: 44px;
+      height: 44px;
+      min-height: 44px;
+      padding: 0;
+      align-self: center;
+      border-color: rgba(255,111,125,.56);
+      color: #ffe4e7;
+      background: rgba(72, 12, 22, .72);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .gift-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+    }
+
+    .gift {
+      border: 1px solid rgba(72, 220, 255, .22);
+      border-radius: 8px;
+      padding: 12px;
+      background: rgba(3, 13, 24, .56);
+      display: grid;
+      gap: 10px;
+    }
+
+    .gift img {
+      width: 100%;
+      height: 118px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: radial-gradient(circle, rgba(255,211,106,.22), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,211,106,.2);
+    }
+
+    .records {
+      display: grid;
+      gap: 8px;
+      max-height: 300px;
+      overflow: auto;
+    }
+
+    .record {
+      display: grid;
+      grid-template-columns: 72px 1fr 96px;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid rgba(72, 220, 255, .18);
+      border-radius: 8px;
+      background: rgba(255,255,255,.04);
+      font-size: 13px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      border: 1px solid rgba(255,211,106,.36);
+      border-radius: 999px;
+      padding: 0 10px;
+      color: var(--gold);
+      background: rgba(255,211,106,.08);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .notice {
+      border-left: 3px solid var(--cyan);
+      background: rgba(38,230,255,.08);
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: #d6f9ff;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    @media (max-width: 960px) {
+      .layout, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      header { align-items: flex-start; flex-direction: column; }
+      .top-actions { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <p class="muted">CONTROL CENTER / VIP GIFT LIVE LOTTERY</p>
+        <h1>VIP礼品直播抽奖后台</h1>
+      </div>
+      <div class="top-actions">
+        <a class="link-btn gold" href="screen.html" target="_blank">打开前端大屏</a>
+        <button class="primary" id="saveBtn">保存配置</button>
+      </div>
+    </header>
+
+    <section class="layout">
+      <aside class="panel">
+        <div class="panel-head">
+          <h2>活动与轮次</h2>
+          <span class="pill" id="saveState">已自动保存</span>
+        </div>
+        <div class="panel-body stack">
+          <label>活动主题名称
+            <input id="activityName" maxlength="32">
+          </label>
+          <div class="grid-2">
+            <label>金库数量
+              <select id="vaultCount">
+                <option value="4">4个</option>
+                <option value="6">6个</option>
+                <option value="8">8个</option>
+              </select>
+            </label>
+          </div>
+          <div class="btns">
+            <button id="addRoundBtn">新增轮次</button>
+            <button id="resetRoundBtn" class="danger">重置所有</button>
+          </div>
+          <div class="round-list" id="roundList"></div>
+        </div>
+      </aside>
+
+      <section class="stack">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>本轮规则</h2>
+            <span class="pill" id="roundStatus">等待抽奖</span>
+          </div>
+          <div class="panel-body stack">
+            <div class="grid-2">
+              <label>轮次名称
+                <input id="roundName" maxlength="24">
+              </label>
+              <label>礼品选择方式
+                <select id="drawMode">
+                  <option value="random">从礼品池随机</option>
+                  <option value="fixed">指定本轮礼品</option>
+                </select>
+              </label>
+            </div>
+            <div class="grid-1">
+              <label>指定礼品
+                <select id="fixedPrize"></select>
+              </label>
+            </div>
+            <div class="notice">保存后前端大屏会读取同一份配置。每个轮次固定抽 1 人；后台有几轮，前端就可依次点击几次金库门，后台自动记录每轮中奖名单。</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>礼品池</h2>
+            <button id="addGiftBtn" class="ghost">新增礼品</button>
+          </div>
+          <div class="panel-body">
+            <div class="gift-grid" id="giftGrid"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>中奖记录回溯</h2>
+            <button id="clearRecordsBtn" class="danger">清空本轮记录</button>
+          </div>
+          <div class="panel-body">
+            <div class="records" id="records"></div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "vipTechVaultLottery.v1";
+    const channel = "BroadcastChannel" in window ? new BroadcastChannel("vip-tech-vault-lottery") : null;
+    const defaultImages = [
+      "assets/vip-prize-watch.png",
+      "assets/vip-prize-phone.png",
+      "assets/vip-prize-jd-card.png",
+      "assets/vip-prize-computer.png"
+    ];
+
+    const defaults = {
+      activityName: "VIP礼品直播抽奖",
+      vaultCount: 6,
+      activeRoundId: "r1",
+      gifts: [
+        { id: "g1", name: "智能腕表", image: defaultImages[0], enabled: true },
+        { id: "g2", name: "旗舰手机", image: defaultImages[1], enabled: true },
+        { id: "g3", name: "京东购物卡", image: defaultImages[2], enabled: true },
+        { id: "g4", name: "商务电脑", image: defaultImages[3], enabled: true },
+        { id: "g5", name: "VIP专属礼盒", image: defaultImages[0], enabled: true },
+        { id: "g6", name: "黄金幸运奖", image: defaultImages[2], enabled: true }
+      ],
+      rounds: [
+        { id: "r1", name: "第一轮", winnerCount: 1, drawMode: "random", fixedPrizeId: "g1", records: [] }
+      ],
+      updatedAt: Date.now()
+    };
+
+    let state = loadState();
+
+    const $ = (id) => document.getElementById(id);
+    const els = {
+      activityName: $("activityName"),
+      vaultCount: $("vaultCount"),
+      roundList: $("roundList"),
+      roundName: $("roundName"),
+      drawMode: $("drawMode"),
+      fixedPrize: $("fixedPrize"),
+      giftGrid: $("giftGrid"),
+      records: $("records"),
+      saveState: $("saveState"),
+      roundStatus: $("roundStatus")
+    };
+
+    function clone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function loadState() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (stored && Array.isArray(stored.gifts) && Array.isArray(stored.rounds)) return { ...clone(defaults), ...stored };
+      } catch (error) {}
+      return clone(defaults);
+    }
+
+    function saveState() {
+      state.updatedAt = Date.now();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      els.saveState.textContent = "已自动保存";
+      if (channel) channel.postMessage({ type: "state", updatedAt: state.updatedAt });
+    }
+
+    function flashSaved(text = "已自动保存") {
+      els.saveState.textContent = text;
+      clearTimeout(flashSaved.timer);
+      flashSaved.timer = setTimeout(() => els.saveState.textContent = "已自动保存", 1200);
+    }
+
+    function activeRound() {
+      return state.rounds.find((round) => round.id === state.activeRoundId) || state.rounds[0];
+    }
+
+    function activeGifts() {
+      return state.gifts.filter((gift) => gift.enabled && gift.name.trim());
+    }
+
+    function render() {
+      const round = activeRound();
+      if (!round) return;
+      state.rounds.forEach((item) => { item.winnerCount = 1; item.records ||= []; });
+      els.activityName.value = state.activityName;
+      if (![4, 6, 8].includes(Number(state.vaultCount))) state.vaultCount = 6;
+      els.vaultCount.value = String(state.vaultCount);
+
+      els.roundList.innerHTML = state.rounds.map((item, index) => {
+        const done = item.records.length >= 1;
+        return `<div class="round-card ${item.id === round.id ? "active" : ""}" data-round="${item.id}">
+          <div class="round-info">
+            <strong>第${index + 1}轮：${escapeHtml(item.name)}</strong>
+            <span>${Math.min(item.records.length, 1)}/1 人已揭晓 · ${done ? "已完成" : "等待抽奖"}</span>
+          </div>
+          <button class="round-delete" data-delete-round="${item.id}" title="删除轮次">×</button>
+        </div>`;
+      }).join("");
+
+      els.roundName.value = round.name;
+      els.drawMode.value = round.drawMode;
+      els.fixedPrize.innerHTML = state.gifts.map((gift) => `<option value="${gift.id}">${escapeHtml(gift.name || "未命名礼品")}</option>`).join("");
+      els.fixedPrize.value = round.fixedPrizeId || state.gifts[0]?.id || "";
+      els.fixedPrize.disabled = round.drawMode === "random";
+
+      els.giftGrid.innerHTML = state.gifts.map((gift, index) => `
+        <article class="gift" data-gift="${gift.id}">
+          <img src="${escapeAttr(gift.image)}" alt="${escapeAttr(gift.name)}">
+          <label>礼品名称
+            <input data-field="name" value="${escapeAttr(gift.name)}" maxlength="24">
+          </label>
+          <label>图片地址
+            <input data-field="image" value="${escapeAttr(gift.image)}">
+          </label>
+          <label>上传图片
+            <input type="file" accept="image/*" data-upload-image>
+          </label>
+          <div class="grid-2">
+            <label>是否进入礼品池
+              <select data-field="enabled">
+                <option value="true" ${gift.enabled ? "selected" : ""}>启用</option>
+                <option value="false" ${!gift.enabled ? "selected" : ""}>停用</option>
+              </select>
+            </label>
+            <label>礼品序号
+              <input value="${index + 1}" disabled>
+            </label>
+          </div>
+          <button class="danger" data-remove="${gift.id}">删除礼品</button>
+        </article>
+      `).join("");
+
+      const records = [...round.records].reverse();
+      els.records.innerHTML = records.length ? records.map((record) => `
+        <div class="record">
+          <span class="pill">${record.vaultNo}号金库</span>
+          <strong>${escapeHtml(record.prizeName)}</strong>
+          <span class="muted">${formatTime(record.time)}</span>
+        </div>
+      `).join("") : `<p class="muted">本轮还没有中奖记录。</p>`;
+
+      const complete = round.records.length >= 1;
+      els.roundStatus.textContent = complete ? "本轮已完成" : "等待抽奖";
+    }
+
+    function updateRound(patch) {
+      const round = activeRound();
+      Object.assign(round, patch);
+      saveState();
+      render();
+    }
+
+    function addRound() {
+      const next = state.rounds.length + 1;
+      const id = `r${Date.now()}`;
+      state.rounds.push({
+        id,
+        name: `第${next}轮`,
+        winnerCount: 1,
+        drawMode: "random",
+        fixedPrizeId: state.gifts[0]?.id || "",
+        records: []
+      });
+      state.activeRoundId = id;
+      saveState();
+      render();
+    }
+
+    function resetRound() {
+      if (!confirm("确定清空所有轮次的抽奖记录吗？")) return;
+      state.rounds.forEach((round) => { round.records = []; });
+      state.activeRoundId = state.rounds[0]?.id || state.activeRoundId;
+      saveState();
+      render();
+    }
+
+    function deleteRound(id) {
+      if (state.rounds.length <= 1) {
+        alert("至少保留一个轮次。");
+        return;
+      }
+      const round = state.rounds.find((item) => item.id === id);
+      if (!round) return;
+      if (!confirm(`确定删除“${round.name}”吗？`)) return;
+      state.rounds = state.rounds.filter((item) => item.id !== id);
+      if (state.activeRoundId === id) state.activeRoundId = state.rounds[0].id;
+      saveState();
+      render();
+    }
+
+    function resetAll() {
+      if (!confirm("确定恢复默认配置并清空全部中奖记录吗？")) return;
+      state = clone(defaults);
+      saveState();
+      render();
+    }
+
+    function addGift() {
+      const id = `g${Date.now()}`;
+      state.gifts.push({ id, name: "新礼品", image: defaultImages[state.gifts.length % defaultImages.length], enabled: true });
+      saveState();
+      render();
+    }
+
+    function removeGift(id) {
+      if (state.gifts.length <= 1) {
+        alert("至少保留一个礼品。");
+        return;
+      }
+      state.gifts = state.gifts.filter((gift) => gift.id !== id);
+      state.rounds.forEach((round) => {
+        if (round.fixedPrizeId === id) round.fixedPrizeId = state.gifts[0]?.id || "";
+        round.records = round.records.filter((record) => record.prizeId !== id);
+      });
+      saveState();
+      render();
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value).replace(/`/g, "&#96;");
+    }
+
+    function formatTime(value) {
+      if (!value) return "--:--";
+      return new Date(value).toLocaleTimeString("zh-CN", { hour12: false, hour: "2-digit", minute: "2-digit" });
+    }
+
+    els.activityName.addEventListener("input", () => {
+      state.activityName = els.activityName.value;
+      saveState();
+      flashSaved();
+    });
+    els.vaultCount.addEventListener("change", () => { state.vaultCount = Number(els.vaultCount.value); saveState(); render(); flashSaved(); });
+    els.roundName.addEventListener("input", () => updateRound({ name: els.roundName.value }));
+    els.drawMode.addEventListener("change", () => updateRound({ drawMode: els.drawMode.value }));
+    els.fixedPrize.addEventListener("change", () => updateRound({ fixedPrizeId: els.fixedPrize.value }));
+
+    els.roundList.addEventListener("click", (event) => {
+      const deleteButton = event.target.closest("[data-delete-round]");
+      if (deleteButton) {
+        event.stopPropagation();
+        deleteRound(deleteButton.dataset.deleteRound);
+        return;
+      }
+      const button = event.target.closest("[data-round]");
+      if (!button) return;
+      state.activeRoundId = button.dataset.round;
+      saveState();
+      render();
+    });
+
+    els.giftGrid.addEventListener("input", (event) => {
+      const card = event.target.closest("[data-gift]");
+      const gift = state.gifts.find((item) => item.id === card?.dataset.gift);
+      if (!gift || !event.target.dataset.field) return;
+      gift[event.target.dataset.field] = event.target.value;
+      saveState();
+      flashSaved();
+    });
+
+    els.giftGrid.addEventListener("change", (event) => {
+      const card = event.target.closest("[data-gift]");
+      const gift = state.gifts.find((item) => item.id === card?.dataset.gift);
+      if (gift && event.target.matches("[data-upload-image]")) {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          gift.image = String(reader.result);
+          saveState();
+          render();
+          flashSaved("图片已上传");
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+      if (!gift || !event.target.dataset.field) return;
+      if (event.target.dataset.field === "enabled") {
+        gift.enabled = event.target.value === "true";
+      } else {
+        gift[event.target.dataset.field] = event.target.value;
+      }
+      saveState();
+      render();
+    });
+
+    els.giftGrid.addEventListener("click", (event) => {
+      const removeId = event.target.dataset.remove;
+      if (removeId) removeGift(removeId);
+    });
+
+    $("addRoundBtn").addEventListener("click", addRound);
+    $("resetRoundBtn").addEventListener("click", resetRound);
+    $("addGiftBtn").addEventListener("click", addGift);
+    $("saveBtn").addEventListener("click", () => { saveState(); flashSaved("保存成功"); });
+    $("clearRecordsBtn").addEventListener("click", resetRound);
+
+    window.addEventListener("storage", (event) => {
+      if (event.key !== STORAGE_KEY) return;
+      state = loadState();
+      render();
+    });
+
+    if (channel) {
+      channel.onmessage = () => {
+        state = loadState();
+        render();
+      };
+    }
+
+    render();
+  </script>
+</body>
+</html>
