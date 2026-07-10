@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>VIP礼品直播抽奖大屏</title>
+  <link rel="preload" as="image" href="assets/vault-stage-bg-ai.webp" type="image/webp">
+  <link rel="preload" as="image" href="assets/vault-door-real-gold-blank.webp" type="image/webp">
   <style>
     :root {
       --cyan: #29e7ff;
@@ -28,7 +30,7 @@
       color: var(--ink);
       background:
         linear-gradient(180deg, rgba(3, 12, 22, .08), rgba(2, 8, 16, .58)),
-        url("assets/vault-stage-bg-ai.png") center / cover no-repeat fixed,
+        url("assets/vault-stage-bg-ai.webp") center / cover no-repeat fixed,
         #06121d;
     }
 
@@ -182,17 +184,18 @@
 
     .status {
       justify-self: end;
-      min-width: 172px;
-      min-height: 54px;
-      border: 1px solid rgba(255,211,106,.5);
-      border-radius: 8px;
+      min-width: 138px;
+      min-height: 42px;
+      border: 1px solid rgba(255,211,106,.28);
+      border-radius: 999px;
       display: grid;
       place-items: center;
-      color: #171006;
-      background: linear-gradient(180deg, #fff4c7, #d6992d);
-      box-shadow: 0 0 34px rgba(255,211,106,.28);
-      font-size: 15px;
-      font-weight: 900;
+      color: rgba(255, 237, 190, .92);
+      background: rgba(5, 17, 29, .42);
+      box-shadow: inset 0 0 18px rgba(255,211,106,.08), 0 0 18px rgba(41,231,255,.08);
+      backdrop-filter: blur(10px);
+      font-size: 14px;
+      font-weight: 800;
     }
 
     .audio-btn {
@@ -283,8 +286,8 @@
 
     .vault:hover:not(.disabled) {
       z-index: 5;
-      transform: scale(1.08);
-      filter: drop-shadow(0 28px 34px rgba(0,0,0,.46)) drop-shadow(0 0 24px rgba(255,211,106,.34));
+      transform: none;
+      filter: drop-shadow(0 28px 34px rgba(0,0,0,.46)) drop-shadow(0 0 26px rgba(255,211,106,.32));
     }
 
     .vault-shell,
@@ -333,7 +336,7 @@
       transform: translate(-50%, -50%);
       transform-origin: 83% 50%;
       transition: transform .78s cubic-bezier(.2,.8,.2,1), filter .55s ease, opacity .55s ease;
-      background: url("assets/vault-door-round-ai.png") center / contain no-repeat;
+      background: url("assets/vault-door-real-gold-blank.webp") center / contain no-repeat;
       box-shadow:
         0 0 34px rgba(86, 184, 220, .12),
         0 0 26px rgba(218,190,126,.18),
@@ -341,7 +344,7 @@
       z-index: 2;
       overflow: hidden;
       animation: none;
-      filter: brightness(1.18) saturate(1.34) sepia(.16) hue-rotate(-5deg);
+      filter: brightness(1.08) saturate(1.08) contrast(1.04);
     }
 
     .vault-door::before {
@@ -351,9 +354,12 @@
     .vault-door::after {
       content: "";
       position: absolute;
-      inset: 8% 12%;
+      inset: 4%;
       border-radius: 999px;
-      box-shadow: inset 0 0 38px rgba(255,244,199,.12), 0 0 24px rgba(255,211,106,.08);
+      box-shadow:
+        inset 0 0 40px rgba(255,244,199,.08),
+        0 0 28px rgba(255,211,106,.14),
+        0 0 52px rgba(41,231,255,.09);
       pointer-events: none;
     }
 
@@ -403,7 +409,7 @@
       z-index: 1;
       transform: translate(-50%, -50%) scale(.96);
       opacity: 0;
-      background: url("assets/vault-interior-ai.png") center / contain no-repeat;
+      background: url("assets/vault-interior-ai.webp") center / contain no-repeat;
       filter: drop-shadow(0 20px 30px rgba(0,0,0,.34)) drop-shadow(0 0 24px rgba(255,211,106,.22));
       transition: opacity .45s ease .12s, transform .55s ease .12s;
       pointer-events: none;
@@ -417,7 +423,7 @@
     .vault.opened .vault-door {
       transform: translate(-50%, -50%);
       opacity: 1;
-      filter: brightness(.9) saturate(.98) sepia(.12) hue-rotate(-4deg);
+      filter: grayscale(.42) brightness(.56) saturate(.86);
     }
 
     .vault.opened .vault-spoke {
@@ -432,32 +438,44 @@
     .vault-no {
       position: absolute;
       z-index: 7;
-      width: clamp(58px, 5.5vw, 76px);
-      height: clamp(58px, 5.5vw, 76px);
-      border-radius: 50%;
+      width: clamp(86px, 6.8vw, 112px);
+      height: clamp(86px, 6.8vw, 112px);
       display: grid;
       place-items: center;
-      color: #391904;
-      background:
-        radial-gradient(circle at 34% 28%, #fff6d6 0 13%, transparent 14%),
-        radial-gradient(circle, #f1d99a 0 35%, #c79d46 36% 62%, #6a4316 63% 100%);
-      border: 3px solid rgba(238,218,168,.82);
-      box-shadow:
-        inset 0 5px 8px rgba(255,255,255,.38),
-        inset 0 -9px 14px rgba(91,38,0,.48),
-        0 0 0 3px rgba(122,55,4,.56),
-        0 0 24px rgba(218,190,126,.34);
-      text-shadow: 0 2px 0 rgba(245,229,187,.68);
-      font-size: clamp(30px, 3.3vw, 46px);
+      color: #f4cd72;
+      color: #fff1bd;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      text-shadow:
+        0 3px 0 rgba(18, 8, 3, .86),
+        0 0 10px rgba(255, 244, 199, .46),
+        0 0 22px rgba(255, 214, 106, .3);
+      font-size: clamp(48px, 4.5vw, 72px);
       font-weight: 900;
       transition: transform .55s ease, opacity .55s ease;
-      animation: numberPulse 1.45s ease-in-out infinite;
+    }
+
+    .vault-no-text {
+      display: block;
+      line-height: 1;
+      transform-origin: center;
+      animation: numberGrow 1.25s ease-in-out infinite;
+    }
+
+    .vault:hover:not(.disabled) .vault-no-text {
+      animation-duration: .72s;
     }
 
     .vault.opened .vault-no {
       transform: scale(.78);
       opacity: .28;
       animation: none;
+    }
+
+    .vault.opened .vault-no-text {
+      animation: none;
+      transform: scale(1);
     }
 
     .door-star {
@@ -658,9 +676,9 @@
       0%, 100% { translate: -34px 0; opacity: .48; }
       50% { translate: 54px 0; opacity: .92; }
     }
-    @keyframes numberPulse {
+    @keyframes numberGrow {
       0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.16); }
+      50% { transform: scale(1.22); }
     }
     @keyframes doorStarFlash {
       0%, 100% { opacity: 0; transform: scale(.28) rotate(0deg); }
@@ -695,7 +713,7 @@
   </style>
 </head>
 <body>
-  <audio id="bgm" src="assets/vip-lottery-bgm.mp3" loop></audio>
+  <audio id="bgm" src="assets/vip-lottery-bgm.mp3" loop preload="none"></audio>
   <main class="screen">
     <div class="beam-layer" aria-hidden="true">
       <span class="beam magenta b1"></span>
@@ -870,7 +888,7 @@
           <span class="door-star" style="--x: 28%; --y: 22%; --s: 22px; --d: 2.4s; --delay: ${-(index * .23).toFixed(2)}s"></span>
           <span class="door-star" style="--x: 64%; --y: 26%; --s: 18px; --d: 2.1s; --delay: ${-(index * .31 + .8).toFixed(2)}s"></span>
           <span class="door-star" style="--x: 76%; --y: 58%; --s: 14px; --d: 2.7s; --delay: ${-(index * .19 + 1.2).toFixed(2)}s"></span>
-          <span class="vault-no">${no}</span>
+          <span class="vault-no"><span class="vault-no-text">${no}</span></span>
           <span class="drawn-mask">已抽奖</span>
           <span class="prize-peek">${record ? `<img src="${escapeAttr(record.image)}" alt="${escapeAttr(record.prizeName)}">` : ""}</span>
         </button>`;
